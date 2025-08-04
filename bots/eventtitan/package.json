@@ -9,7 +9,11 @@
     "@botpress/sdk": "workspace:*"
   },
   "bpDependencies": {
-    "whatsapp": "../../integrations/whatsapp"
+    "whatsapp": "../../integrations/whatsapp",
+    "openai": "../../integrations/openai",
+    "chat": "../../integrations/chat",
+    "webhook": "../../integrations/webhook",
+    "knowledge": "../../plugins/knowledge"
   },
   "devDependencies": {
     "@types/node": "^18.19.67",
