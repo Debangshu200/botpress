@@ -2,7 +2,6 @@ import * as sdk from '@botpress/sdk'
 import chat from './bp_modules/chat'
 import webhook from './bp_modules/webhook'
 import openai from './bp_modules/openai'
-import whatsapp from './bp_modules/whatsapp'
 
 export default new sdk.BotDefinition({
   integrations: {},
@@ -34,11 +33,3 @@ export default new sdk.BotDefinition({
   enabled: true,
   configuration: {}
 })
-// .addIntegration(whatsapp, {
-//   enabled: true,
-//   configuration: {
-//     typingIndicatorEmoji: false,
-//     downloadMedia: true,
-//     downloadedMediaExpiry: 24
-//   }
-// })

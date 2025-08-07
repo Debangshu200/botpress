@@ -1,25 +1,9 @@
 import { Api } from './api'
 import { searchKnowledge, isQuestion } from './knowledge-handler'
+import { AudioHandler } from './audio-handler'
 import * as bp from '.botpress'
 
-const bot = new bp.Bot({
-  actions: {},
-})
-
-bot.on.message('*', async (args) => {
-  console.info('EventTitan bot received message', args.message)
-
-  const api = Api.from(args)
-  
-  if (args.message.type !== 'text') {
-    await api.respond({ 
-      type: 'text', 
-      text: '📄 I received your file! I can help you with event planning questions and search my knowledge base for relevant information.\n\nType "help" to see what I can do!' 
-    })
-    return
-  }
-
-  const userMessage = args.message.payload.text
+async function processTextMessage(userMessage: string, api: Api): Promise<void> {
   const userMessageLower = userMessage.toLowerCase()
   
   // First, check if this is a question and search knowledge base
@@ -66,6 +50,49 @@ bot.on.message('*', async (args) => {
       text: `🔍 You asked: "${userMessage}"\n\nI'm EventTitan, your event management assistant! Type 'help' to see what I can assist with! 🎉`
     })
   }
+}
+
+const bot = new bp.Bot({
+  actions: {},
+})
+
+bot.on.message('*', async (args) => {
+  console.info('EventTitan bot received message', args.message)
+
+  const api = Api.from(args)
+  
+  // Handle audio messages
+  if (args.message.type === 'audio') {
+    const audioHandler = new AudioHandler(args.client)
+    const audioMessage = {
+      type: 'audio' as const,
+      payload: {
+        audioUrl: args.message.payload.audioUrl
+      },
+      conversationId: args.conversation.id,
+      userId: args.user?.id
+    }
+    
+    const transcribedText = await audioHandler.handleAudioMessage(audioMessage, api)
+    
+    // If transcription was successful, process the transcribed text
+    if (transcribedText) {
+      await processTextMessage(transcribedText, api)
+    }
+    return
+  }
+  
+  // Handle non-text, non-audio messages
+  if (args.message.type !== 'text') {
+    await api.respond({ 
+      type: 'text', 
+      text: '📄 I received your file! I can help you with event planning questions and search my knowledge base for relevant information.\n\nType "help" to see what I can do!' 
+    })
+    return
+  }
+
+  const userMessage = args.message.payload.text
+  await processTextMessage(userMessage, api)
 })
 
 export default bot
