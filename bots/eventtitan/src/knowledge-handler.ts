@@ -75,7 +75,10 @@ Catering considerations:
 export function searchKnowledge(query: string): string | null {
   const queryLower = query.toLowerCase()
   
-  // Simple keyword matching
+  // Find matching topic
+  let matchedTopic: string | null = null
+  let matchedContent: string | null = null
+  
   for (const [topic, content] of Object.entries(knowledgeBase)) {
     if (queryLower.includes(topic) || 
         queryLower.includes(topic.replace(' ', '')) ||
@@ -85,11 +88,107 @@ export function searchKnowledge(query: string): string | null {
         (topic === 'corporate events' && queryLower.includes('corporate')) ||
         (topic === 'budgeting' && (queryLower.includes('budget') || queryLower.includes('cost'))) ||
         (topic === 'catering' && queryLower.includes('catering'))) {
-      return content
+      matchedTopic = topic
+      matchedContent = content
+      break
     }
   }
   
-  return null
+  if (!matchedContent || !matchedTopic) {
+    return null
+  }
+  
+  // Generate contextual response based on the query
+  return generateContextualResponse(query, matchedTopic, matchedContent)
+}
+
+function generateContextualResponse(query: string, topic: string, content: string): string {
+  const queryLower = query.toLowerCase()
+  
+  // Extract relevant sections based on query intent
+  const sections = content.split('\n\n')
+  const relevantSections: string[] = []
+  
+  // Analyze query for specific intent
+  const queryIntent = analyzeQueryIntent(queryLower)
+  
+  // For specific questions, provide focused answers
+  if (queryIntent.isSpecific) {
+    // Look for sections that match the specific intent
+    sections.forEach(section => {
+      const sectionLower = section.toLowerCase()
+      
+      // Check if section contains relevant keywords from the query
+      const queryKeywords = extractQueryKeywords(queryLower)
+      const hasRelevantKeywords = queryKeywords.some(keyword => 
+        sectionLower.includes(keyword) || 
+        sectionLower.includes(keyword.replace(' ', ''))
+      )
+      
+      if (hasRelevantKeywords) {
+        relevantSections.push(section.trim())
+      }
+    })
+    
+    // If we found relevant sections, use them
+    if (relevantSections.length > 0) {
+      const response = relevantSections.slice(0, 2).join('\n\n') // Limit to 2 most relevant sections
+      return `${response}\n\n💡 Would you like more specific information about ${topic}?`
+    }
+  }
+  
+  // For general questions, provide a summary with key points
+  const summary = generateSummary(content, topic)
+  return `${summary}\n\n💡 I can provide more detailed information about specific aspects of ${topic}. What would you like to know more about?`
+}
+
+function analyzeQueryIntent(query: string): { isSpecific: boolean, intent: string } {
+  // Check for specific question patterns
+  const specificPatterns = [
+    'how to', 'how do', 'what is', 'what are', 'when should', 'where can',
+    'steps', 'process', 'timeline', 'checklist', 'cost', 'price', 'budget'
+  ]
+  
+  const isSpecific = specificPatterns.some(pattern => query.includes(pattern))
+  
+  // Determine intent category
+  let intent = 'general'
+  if (query.includes('how') || query.includes('steps') || query.includes('process')) {
+    intent = 'process'
+  } else if (query.includes('cost') || query.includes('budget') || query.includes('price')) {
+    intent = 'cost'
+  } else if (query.includes('when') || query.includes('timeline')) {
+    intent = 'timing'
+  } else if (query.includes('what') || query.includes('explain')) {
+    intent = 'definition'
+  }
+  
+  return { isSpecific, intent }
+}
+
+function extractQueryKeywords(query: string): string[] {
+  // Remove common question words and extract meaningful keywords
+  const stopWords = ['what', 'how', 'when', 'where', 'why', 'who', 'which', 'is', 'are', 'do', 'does', 'can', 'should', 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by']
+  
+  return query
+    .split(/\s+/)
+    .filter(word => word.length > 2 && !stopWords.includes(word))
+    .slice(0, 5) // Limit to 5 most important keywords
+}
+
+function generateSummary(content: string, topic: string): string {
+  // Extract the first paragraph as a summary
+  const paragraphs = content.split('\n\n')
+  const firstParagraph = paragraphs[0]
+  
+  // If the first paragraph is too long, truncate it
+  if (firstParagraph.length > 200) {
+    const sentences = firstParagraph.split('. ')
+    const summary = sentences.slice(0, 2).join('. ')
+    return `${summary}.`
+  }
+  
+  return firstParagraph
 }
 
 export function isQuestion(text: string): boolean {

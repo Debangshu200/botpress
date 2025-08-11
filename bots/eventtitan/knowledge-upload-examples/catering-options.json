@@ -1,0 +1,230 @@
+{
+  "catering_guide": {
+    "service_styles": {
+      "plated_dinner": {
+        "description": "Formal sit-down dinner with pre-selected courses served to each guest",
+        "best_for": ["weddings", "corporate galas", "award ceremonies"],
+        "pros": ["elegant presentation", "portion control", "formal atmosphere"],
+        "cons": ["higher cost", "limited menu options", "longer service time"],
+        "cost_range": "$35-80 per person",
+        "service_requirements": "1 server per 8-10 guests"
+      },
+      "buffet_style": {
+        "description": "Self-service stations with variety of food options",
+        "best_for": ["casual events", "large groups", "diverse dietary needs"],
+        "pros": ["cost effective", "variety of options", "faster service"],
+        "cons": ["less formal", "potential for long lines", "food temperature issues"],
+        "cost_range": "$20-45 per person",
+        "service_requirements": "1 server per 25-30 guests"
+      },
+      "cocktail_reception": {
+        "description": "Standing reception with passed hors d'oeuvres and stationed appetizers",
+        "best_for": ["networking events", "product launches", "holiday parties"],
+        "pros": ["encourages mingling", "flexible timing", "lower cost"],
+        "cons": ["guests may leave hungry", "requires more servers", "limited seating"],
+        "cost_range": "$15-35 per person",
+        "service_requirements": "1 server per 15-20 guests"
+      },
+      "family_style": {
+        "description": "Large platters served to tables for guests to share",
+        "best_for": ["intimate gatherings", "cultural events", "casual celebrations"],
+        "pros": ["interactive dining", "cost effective", "creates conversation"],
+        "cons": ["messy potential", "uneven portions", "dietary restriction challenges"],
+        "cost_range": "$25-50 per person",
+        "service_requirements": "1 server per 12-15 guests"
+      },
+      "food_stations": {
+        "description": "Multiple themed food stations throughout the venue",
+        "best_for": ["large events", "diverse crowds", "interactive experiences"],
+        "pros": ["variety and choice", "reduces lines", "entertainment value"],
+        "cons": ["higher setup cost", "requires more space", "complex logistics"],
+        "cost_range": "$30-60 per person",
+        "service_requirements": "1 chef per station plus servers"
+      }
+    },
+    "menu_categories": {
+      "appetizers": {
+        "passed_hors_doeuvres": [
+          "bacon-wrapped scallops",
+          "mini quiches",
+          "stuffed mushrooms",
+          "shrimp cocktail",
+          "bruschetta",
+          "chicken satay"
+        ],
+        "stationed_appetizers": [
+          "cheese and charcuterie boards",
+          "raw bar with oysters and clams",
+          "vegetable crudité with dips",
+          "international cheese station",
+          "sushi and sashimi bar"
+        ]
+      },
+      "main_courses": {
+        "meat_options": [
+          "grilled salmon with herbs",
+          "beef tenderloin with red wine reduction",
+          "roasted chicken breast",
+          "pork tenderloin with apple glaze",
+          "lamb chops with mint sauce"
+        ],
+        "vegetarian_options": [
+          "stuffed portobello mushrooms",
+          "vegetable lasagna",
+          "quinoa stuffed bell peppers",
+          "eggplant parmesan",
+          "wild rice pilaf"
+        ],
+        "dietary_alternatives": [
+          "gluten-free pasta dishes",
+          "vegan protein options",
+          "kosher certified meals",
+          "halal meat preparations",
+          "low-sodium alternatives"
+        ]
+      },
+      "desserts": {
+        "traditional": [
+          "wedding cake",
+          "chocolate mousse",
+          "tiramisu",
+          "fruit tarts",
+          "cheesecake varieties"
+        ],
+        "interactive": [
+          "dessert stations",
+          "ice cream sundae bar",
+          "chocolate fountain",
+          "s'mores station",
+          "crepe station"
+        ]
+      }
+    },
+    "dietary_considerations": {
+      "common_restrictions": {
+        "vegetarian": {
+          "definition": "No meat, poultry, or fish",
+          "considerations": "Check for animal-based broths and gelatin",
+          "percentage_of_guests": "10-15%"
+        },
+        "vegan": {
+          "definition": "No animal products including dairy and eggs",
+          "considerations": "Verify all ingredients and cooking methods",
+          "percentage_of_guests": "3-5%"
+        },
+        "gluten_free": {
+          "definition": "No wheat, barley, rye, or contaminated oats",
+          "considerations": "Prevent cross-contamination in preparation",
+          "percentage_of_guests": "5-8%"
+        },
+        "kosher": {
+          "definition": "Prepared according to Jewish dietary laws",
+          "considerations": "Requires certified kosher caterer and supervision",
+          "percentage_of_guests": "varies by region"
+        },
+        "halal": {
+          "definition": "Prepared according to Islamic dietary laws",
+          "considerations": "No pork or alcohol, specific slaughter requirements",
+          "percentage_of_guests": "varies by region"
+        }
+      },
+      "allergy_management": {
+        "common_allergens": [
+          "nuts and tree nuts",
+          "shellfish and fish",
+          "dairy products",
+          "eggs",
+          "soy products",
+          "wheat and gluten"
+        ],
+        "safety_protocols": [
+          "separate preparation areas",
+          "dedicated serving utensils",
+          "clear labeling of all dishes",
+          "staff training on allergen awareness",
+          "emergency action plans"
+        ]
+      }
+    },
+    "beverage_service": {
+      "bar_options": {
+        "open_bar": {
+          "description": "All drinks included in package price",
+          "duration_options": ["2 hours", "4 hours", "all evening"],
+          "cost_range": "$15-35 per person per hour",
+          "includes": ["premium spirits", "wine", "beer", "mixers", "garnishes"]
+        },
+        "cash_bar": {
+          "description": "Guests pay for their own drinks",
+          "considerations": "May seem inhospitable to some guests",
+          "typical_prices": "$8-15 per drink",
+          "setup_fee": "$200-500"
+        },
+        "limited_bar": {
+          "description": "Selected beer, wine, and signature cocktails only",
+          "cost_range": "$10-20 per person per hour",
+          "popular_options": ["beer and wine only", "signature cocktails", "champagne toast"]
+        }
+      },
+      "non_alcoholic_options": {
+        "standard": ["soft drinks", "juices", "coffee", "tea", "water"],
+        "premium": ["specialty coffees", "fresh juices", "flavored waters", "mocktails"],
+        "considerations": ["provide interesting options for non-drinkers", "ensure adequate supply"]
+      }
+    },
+    "cost_factors": {
+      "pricing_variables": {
+        "guest_count": "Most significant factor in total cost",
+        "service_style": "Plated service costs more than buffet",
+        "menu_complexity": "Simple menus cost less than elaborate preparations",
+        "service_level": "Higher server-to-guest ratios increase cost",
+        "location": "Urban venues typically cost more than suburban",
+        "day_of_week": "Weekend events cost 20-30% more",
+        "season": "Peak seasons (spring/fall) have higher prices"
+      },
+      "additional_costs": {
+        "service_charges": "18-22% of food and beverage total",
+        "gratuities": "Additional 15-20% for exceptional service",
+        "equipment_rental": "Tables, chairs, linens, china, glassware",
+        "setup_fees": "Kitchen rental, prep time, breakdown",
+        "travel_charges": "For off-site catering locations",
+        "overtime_fees": "Events extending beyond contracted hours"
+      }
+    },
+    "vendor_selection": {
+      "evaluation_criteria": {
+        "experience": "Years in business and event specialization",
+        "reputation": "Reviews, references, and industry recognition",
+        "licensing": "Food service permits and liability insurance",
+        "flexibility": "Ability to accommodate special requests",
+        "presentation": "Food quality and visual appeal",
+        "service_quality": "Staff professionalism and attentiveness"
+      },
+      "questions_to_ask": [
+        "Can you provide references from recent similar events?",
+        "What's included in your base package?",
+        "How do you handle dietary restrictions and allergies?",
+        "What's your policy on leftover food?",
+        "Do you provide all serving equipment?",
+        "What's your cancellation and refund policy?",
+        "How many events do you cater per day?",
+        "Can we schedule a tasting before booking?"
+      ]
+    },
+    "timeline_and_logistics": {
+      "booking_timeline": {
+        "6_months_before": "Research and interview caterers",
+        "4_months_before": "Book caterer and finalize menu",
+        "2_months_before": "Confirm final guest count and dietary needs",
+        "1_month_before": "Final menu tasting and adjustments",
+        "1_week_before": "Provide final headcount and special requests"
+      },
+      "day_of_coordination": {
+        "setup_requirements": "Kitchen access, electrical needs, water supply",
+        "service_timeline": "Coordinate with other vendors and venue",
+        "breakdown_process": "Cleanup responsibilities and timeline",
+        "emergency_contacts": "Key personnel and backup plans"
+      }
+    }
+  }
+}

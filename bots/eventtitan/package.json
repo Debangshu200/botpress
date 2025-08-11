@@ -1,19 +1,23 @@
 {
   "name": "@bp-bots/eventtitan",
   "scripts": {
-    "check:type": "tsc --noEmit"
+    "check:type": "tsc --noEmit",
+    "upload-knowledge": "npx tsx src/upload-knowledge-cli.ts",
+    "knowledge-stats": "npx tsx src/knowledge-stats-cli.ts",
+    "test-knowledge": "npx tsx src/test-knowledge-upload.ts",
+    "chat-bot": "npx tsx src/bot-qa-tester.ts"
   },
   "private": true,
   "dependencies": {
-    "@botpress/client": "workspace:*",
-    "@botpress/sdk": "workspace:*"
+    "tsx": "^4.7.0"
   },
   "bpDependencies": {
     "whatsapp": "../../integrations/whatsapp",
     "openai": "../../integrations/openai",
     "chat": "../../integrations/chat",
     "webhook": "../../integrations/webhook",
-    "knowledge": "../../plugins/knowledge"
+    "knowledge": "../../plugins/knowledge",
+    "hitl": "../../plugins/hitl"
   },
   "devDependencies": {
     "@types/node": "^18.19.67",
