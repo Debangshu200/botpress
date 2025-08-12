@@ -52,8 +52,8 @@ async function processTextMessage(userMessage: string, api: Api, args: bp.Messag
   const userMessageLower = userMessage.toLowerCase()
   
   try {
-    // Use enhanced message processor for intelligent routing
-    const processingResult = await messageProcessor.processMessage(userMessage)
+    // Use enhanced message processor for intelligent routing (now with AI synthesis!)
+    const processingResult = await messageProcessor.processMessage(userMessage, undefined, undefined, args.client)
     
     if (processingResult.shouldRespond && processingResult.response) {
       console.info('EventTitan: Enhanced processor providing response', {

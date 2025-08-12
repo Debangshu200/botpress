@@ -6,7 +6,8 @@
 import { ConfidenceEngine, ConfidenceScore, SearchResult, SearchMetadata } from './confidence-engine'
 import { MessageRouter, RoutingDecision, UserProfile, Message } from './message-router'
 import { ConfigurationManager, SystemConfiguration } from './config-manager'
-import { searchKnowledge, isQuestion, extractQuestions } from './knowledge-handler'
+import { searchKnowledge, searchKnowledgeWithAI, isQuestion, extractQuestions } from './knowledge-handler'
+import { searchKnowledgeEnhanced, isVectorSearchAvailable } from './enhanced-vector-knowledge-handler'
 import { ResponseQualityIndicators, QualityIndicators, UserFeedback } from './response-quality-indicators'
 import { KnowledgeErrorHandler, KnowledgeSearchOptions, DEFAULT_KNOWLEDGE_SEARCH_OPTIONS } from './knowledge-error-handler'
 
@@ -84,7 +85,8 @@ export class EnhancedMessageProcessor {
   async processMessage(
     message: string, 
     userProfile?: UserProfile,
-    _conversationHistory?: Message[]
+    _conversationHistory?: Message[],
+    client?: any // Add client parameter for AI synthesis
   ): Promise<ProcessingResult> {
     const startTime = Date.now()
     const config = this.configManager.getConfiguration()
@@ -111,7 +113,7 @@ export class EnhancedMessageProcessor {
       let searchPerformed = false
 
       if (this.shouldPerformSearch(message, queryType, extractedQuestions)) {
-        searchResults = await this.performKnowledgeSearch(message, config)
+        searchResults = await this.performKnowledgeSearch(message, config, client)
         searchPerformed = true
       }
       metrics.searchTime = Date.now() - searchStart
@@ -342,7 +344,7 @@ export class EnhancedMessageProcessor {
   /**
    * Perform knowledge search with enhanced result processing and error handling
    */
-  private async performKnowledgeSearch(message: string, config: SystemConfiguration): Promise<SearchResult[]> {
+  private async performKnowledgeSearch(message: string, config: SystemConfiguration, client?: any): Promise<SearchResult[]> {
     const searchOptions: KnowledgeSearchOptions = {
       timeout: config.knowledge.searchTimeout || 5000,
       retryConfig: {
@@ -360,20 +362,48 @@ export class EnhancedMessageProcessor {
     const searchFunction = async (): Promise<SearchResult[]> => {
       const searchResults: SearchResult[] = []
       
-      // Use existing knowledge search
-      const knowledgeResponse = searchKnowledge(message)
+      // Use AI-powered knowledge search if client is available, otherwise fallback to basic search
+      let knowledgeResponse: string | null = null
+      
+      if (client && isVectorSearchAvailable(client)) {
+        try {
+          // Use enhanced vector search with built-in Botpress embeddings + AI refinement
+          console.info('Using enhanced vector search for knowledge query:', message.substring(0, 100))
+          knowledgeResponse = await searchKnowledgeEnhanced(message, client)
+        } catch (vectorError) {
+          console.warn('Enhanced vector search failed, falling back to AI search:', vectorError)
+          try {
+            knowledgeResponse = await searchKnowledgeWithAI(message, client)
+          } catch (aiError) {
+            console.warn('AI search also failed, falling back to basic search:', aiError)
+            knowledgeResponse = searchKnowledge(message)
+          }
+        }
+      } else if (client) {
+        try {
+          // Fallback to AI-enhanced search if vector search not available
+          knowledgeResponse = await searchKnowledgeWithAI(message, client)
+        } catch (aiError) {
+          console.warn('AI-powered search failed, falling back to basic search:', aiError)
+          knowledgeResponse = searchKnowledge(message)
+        }
+      } else {
+        // Final fallback to basic search if no client available
+        knowledgeResponse = searchKnowledge(message)
+      }
       
       if (knowledgeResponse) {
-        // Convert simple string response to SearchResult format
+        // Convert response to SearchResult format
         const result: SearchResult = {
           content: knowledgeResponse,
           score: this.calculateSimpleRelevanceScore(message, knowledgeResponse),
-          source: 'Knowledge Base',
+          source: client ? 'AI-Enhanced Knowledge Base' : 'Knowledge Base',
           metadata: {
             topic: this.extractTopic(message),
-            relevanceScore: 0.8, // Default high relevance for matched content
+            relevanceScore: client ? 0.9 : 0.8, // Higher relevance for AI-enhanced responses
             matchType: 'partial',
-            keywords: this.extractKeywords(message)
+            keywords: this.extractKeywords(message),
+            aiEnhanced: !!client
           }
         }
         

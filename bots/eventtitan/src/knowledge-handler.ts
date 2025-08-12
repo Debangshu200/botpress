@@ -102,6 +102,63 @@ export function searchKnowledge(query: string): string | null {
   return generateContextualResponse(query, matchedTopic, matchedContent)
 }
 
+/**
+ * Enhanced search with AI synthesis and response refinement
+ */
+export async function searchKnowledgeWithAI(query: string, client: any): Promise<string | null> {
+  // Import the refiner and config (dynamic import to avoid circular dependencies)
+  const { KnowledgeResponseRefiner } = await import('./knowledge-response-refiner')
+  const { refinementConfigManager, detectTopicFromQuery } = await import('./knowledge-refinement-config')
+  
+  // First, do the retrieval (existing logic)
+  const retrievedContent = searchKnowledge(query)
+  
+  if (!retrievedContent) {
+    return null
+  }
+  
+  try {
+    // Detect topic and get appropriate configuration
+    const topic = detectTopicFromQuery(query)
+    const config = refinementConfigManager.getConfigForTopic(topic)
+    
+    // Initialize the response refiner with topic-specific configuration
+    const refiner = KnowledgeResponseRefiner.withConfig(config, client)
+    
+    // Refine the response to be concise and user-friendly
+    const refinedResponse = await refiner.refineResponse(retrievedContent, query, {
+      maxLines: config.maxLines,
+      removeFileNames: config.removeFileNames,
+      removeSources: config.removeSources,
+      addEmojis: config.addEmojis,
+      includeFollowUp: config.includeFollowUp,
+      temperature: config.temperature,
+      maxTokens: config.maxTokens
+    })
+    
+    console.info('Knowledge response refined:', {
+      topic,
+      originalLength: refinedResponse.originalLength,
+      refinedLength: refinedResponse.refinedLength,
+      confidence: refinedResponse.confidence,
+      wasRefined: refinedResponse.wasRefined,
+      processingTime: refinedResponse.processingTime,
+      configUsed: {
+        maxLines: config.maxLines,
+        aiEnabled: config.aiRefinementEnabled,
+        addEmojis: config.addEmojis
+      }
+    })
+    
+    return refinedResponse.content
+    
+  } catch (error) {
+    console.warn('AI synthesis and refinement failed, falling back to basic response:', error)
+    // Fallback to the basic response if AI fails
+    return retrievedContent
+  }
+}
+
 function generateContextualResponse(query: string, topic: string, content: string): string {
   const queryLower = query.toLowerCase()
   
