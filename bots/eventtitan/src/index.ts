@@ -1,8 +1,18 @@
 import { Api } from './api'
 import { AudioHandler } from './audio-handler'
-import { EnhancedMessageProcessor } from './enhanced-message-processor'
+import { LLMEnhancedMessageProcessor } from './llm-enhanced-message-processor'
 import { HandoffManager } from './handoff-manager'
+import { llmConfig, validateLLMSetup } from './llm-config'
 import * as bp from '.botpress'
+
+// Validate LLM setup on startup
+const llmSetup = validateLLMSetup()
+if (!llmSetup.ready) {
+  console.warn('EventTitan: LLM integration not ready:', llmSetup.issues)
+  console.warn('EventTitan: Bot will use fallback knowledge responses. See LLM-INTEGRATION-SETUP.md for setup instructions.')
+} else {
+  console.info('EventTitan: LLM integration ready with model:', llmConfig.getConfig().openRouter.defaultModel)
+}
 
 // Initialize the handoff manager
 const handoffManager = new HandoffManager({
@@ -12,39 +22,34 @@ const handoffManager = new HandoffManager({
   recordingEnabled: true
 })
 
-// Initialize the enhanced message processor with handoff enabled
-const messageProcessor = new EnhancedMessageProcessor({
+// Initialize the LLM-enhanced message processor
+const messageProcessor = new LLMEnhancedMessageProcessor({
+  llm: {
+    enabled: llmSetup.ready,
+    maxTokens: 400,
+    temperature: 0.7,
+    timeout: 30000
+  },
   knowledge: {
-    confidenceThreshold: 0.6,
-    searchTimeout: 3000,
-    maxResults: 5,
-    semanticSimilarityWeight: 0.4,
-    keywordMatchWeight: 0.3,
-    qualityWeight: 0.2,
-    coverageWeight: 0.1
+    confidenceThreshold: 0.4,
+    maxResults: 3,
+    searchTimeout: 5000
   },
   handoff: {
-    enabled: true, // Now enabled with HITL integration
-    agentTimeout: 30000,
-    queueLimit: 10,
-    autoHandoffThreshold: 0.3,
-    recordConversations: true,
-    notifyUser: true
+    enabled: true,
+    lowConfidenceThreshold: 0.3,
+    autoHandoffEnabled: false
   },
-  routing: {
-    confidenceThreshold: 0.6,
-    clarificationThreshold: 0.4,
-    maxSearchResults: 5,
-    responseTimeout: 5000,
-    fallbackEnabled: true
+  response: {
+    maxLength: 500,
+    includeFollowUps: true,
+    includeSources: true,
+    addEmojis: false
   },
-  processing: {
-    maxQueryLength: 500,
-    enableLogging: true,
-    logLevel: 'info',
-    performanceTracking: true,
-    cacheEnabled: true,
-    cacheTimeout: 300000
+  performance: {
+    enableCaching: true,
+    logProcessingTime: true,
+    enableFallback: true
   }
 })
 
@@ -52,23 +57,42 @@ async function processTextMessage(userMessage: string, api: Api, args: bp.Messag
   const userMessageLower = userMessage.toLowerCase()
   
   try {
-    // Use enhanced message processor for intelligent routing (now with AI synthesis!)
-    const processingResult = await messageProcessor.processMessage(userMessage, undefined, undefined, args.client)
+    // First, try the strict document-based knowledge search
+    const { searchKnowledge } = await import('./knowledge-handler')
+    const knowledgeResult = searchKnowledge(userMessage)
     
-    if (processingResult.shouldRespond && processingResult.response) {
-      console.info('EventTitan: Enhanced processor providing response', {
-        confidence: processingResult.confidence.score,
-        route: processingResult.routingDecision.route,
-        processingTime: processingResult.processingTime,
-        hasQualityIndicators: !!processingResult.qualityIndicators
+    if (knowledgeResult) {
+      console.info('EventTitan: Document-based knowledge providing response')
+      await api.respond({ 
+        type: 'text', 
+        text: knowledgeResult
       })
-      
-      // Use formatted response with quality indicators if available, otherwise use basic response
-      const responseText = processingResult.formattedResponse || processingResult.response
+      return
+    }
+    
+    // If no document-based knowledge found, return the fallback message
+    console.info('EventTitan: No document-based knowledge found, using fallback message')
+    await api.respond({ 
+      type: 'text', 
+      text: "Sorry I don't have any answer, let me connect you to our customer care associate"
+    })
+    return
+    
+    // Use LLM-enhanced message processor for intelligent routing and response generation
+    const processingResult = await messageProcessor.processMessage(userMessage, [], args.user?.id)
+    
+    if (processingResult.confidence > 0 && processingResult.response) {
+      console.info('EventTitan: LLM-enhanced processor providing response', {
+        confidence: processingResult.confidence,
+        llmUsed: processingResult.llmUsed,
+        processingTime: processingResult.processingTime,
+        sources: processingResult.sources.length,
+        followUps: processingResult.followUpQuestions.length
+      })
       
       await api.respond({ 
         type: 'text', 
-        text: responseText
+        text: processingResult.response
       })
       return
     }
@@ -79,10 +103,11 @@ async function processTextMessage(userMessage: string, api: Api, args: bp.Messag
       // Prepare handoff context
       const handoffContext = {
         originalQuery: userMessage,
-        searchResults: processingResult.searchResults || [],
+        searchResults: [], // LLM processor doesn't expose raw search results
         conversationHistory: [], // TODO: Implement conversation history tracking
-        confidence: processingResult.confidence.score,
-        timestamp: new Date()
+        confidence: processingResult.confidence,
+        timestamp: new Date(),
+        handoffReason: processingResult.handoffReason
       }
       
       // Notify user that handoff is being initiated
@@ -132,9 +157,9 @@ async function processTextMessage(userMessage: string, api: Api, args: bp.Messag
             text: errorMessage
           })
           
-          // Try to provide a fallback response if we have search results
-          if (processingResult.searchResults && processingResult.searchResults.length > 0) {
-            const fallbackResponse = `Here's what I found in my knowledge base:\n\n${processingResult.searchResults[0].content.substring(0, 300)}...`
+          // Try to provide a fallback response if we have a response from the processor
+          if (processingResult.response && processingResult.response.length > 50) {
+            const fallbackResponse = `Here's what I found in my knowledge base:\n\n${processingResult.response.substring(0, 300)}...`
             await api.respond({
               type: 'text',
               text: fallbackResponse

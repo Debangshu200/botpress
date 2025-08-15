@@ -18,3 +18,4 @@ tilt_config.json
 /.idea
 .eslintcache
 .kiro
+./bots/eventtitan/src/.env

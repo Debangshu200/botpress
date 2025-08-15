@@ -5,10 +5,18 @@
     "upload-knowledge": "npx tsx src/upload-knowledge-cli.ts",
     "knowledge-stats": "npx tsx src/knowledge-stats-cli.ts",
     "test-knowledge": "npx tsx src/test-knowledge-upload.ts",
-    "chat-bot": "npx tsx src/bot-qa-tester.ts"
+    "test:llm": "npx tsx src/test-llm-integration.ts",
+    "test:gpt-oss-20b": "npx tsx src/test-gpt-oss-20b.ts",
+    "chat": "npx tsx src/chat-cli.ts",
+    "chat:web": "npx tsx src/chat-web-server.ts",
+    "chat:quick": "npx tsx src/test-llm-integration.ts --quick",
+    "llm": "npx tsx src/llm-cli.ts",
+    "chat-bot": "npx tsx src/bot-qa-tester.ts",
+    "test:chat": "npx tsx src/test-knowledge-enhanced-chat.ts"
   },
   "private": true,
   "dependencies": {
+    "dotenv": "^17.2.1",
     "tsx": "^4.7.0"
   },
   "bpDependencies": {

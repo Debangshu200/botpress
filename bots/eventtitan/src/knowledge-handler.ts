@@ -1,105 +1,309 @@
 /**
- * Simplified Knowledge Handler
- * This provides basic knowledge-based responses without the plugin
+ * Document-Based Knowledge Handler
+ * This provides responses ONLY from uploaded documents in knowledge-upload-examples
  */
 
-// Test knowledge base content
-const knowledgeBase = {
-  'event planning': `Event planning is the process of organizing and coordinating all aspects of an event, from initial concept to execution. This comprehensive approach includes venue selection, catering arrangements, entertainment booking, guest management, timeline coordination, and budget oversight.
+import * as fs from 'fs'
+import * as path from 'path'
 
-Key phases of event planning:
-1. Initial consultation and goal setting
-2. Budget development and approval
-3. Venue research and booking
-4. Vendor selection and coordination
-5. Timeline creation and management
-6. Day-of execution and oversight`,
+// Load actual knowledge documents
+const KNOWLEDGE_BASE_PATH = path.join(__dirname, '..', 'knowledge-upload-examples')
+const FALLBACK_MESSAGE = "Sorry I don't have any answer, let me connect you to our customer care associate"
 
-  'wedding planning': `Wedding planning requires careful attention to detail and timeline management. Start planning 12-18 months in advance for best results. Key steps include: setting a budget, choosing a venue, selecting vendors (photographer, caterer, florist), sending invitations, and coordinating the ceremony and reception.
-
-Essential wedding planning timeline:
-- 12-18 months before: Set budget, book venue
-- 8-12 months before: Select major vendors
-- 6-8 months before: Send save-the-dates
-- 3-6 months before: Finalize details, send invitations
-- 1-3 months before: Confirm all arrangements
-- Week of: Final preparations and rehearsal`,
-
-  'venue selection': `Venue selection is crucial for event success. Consider these factors: capacity (ensure it fits your guest count with 10% buffer), location accessibility, parking availability, catering restrictions, audio/visual equipment, decoration policies, and pricing structure.
-
-Venue evaluation checklist:
-- Capacity and layout suitability
-- Location and accessibility
-- Parking and transportation
-- Catering kitchen and restrictions
-- Audio/visual capabilities
-- Decoration and setup policies
-- Pricing and payment terms
-- Availability for preferred dates`,
-
-  'corporate events': `Corporate events serve various purposes: team building, product launches, conferences, and client entertainment. Key considerations include professional atmosphere, appropriate catering, AV equipment for presentations, networking opportunities, and brand representation. Budget typically ranges from $50-200 per person depending on event type and location.
-
-Types of corporate events:
-- Team building activities
-- Product launch events
-- Annual conferences
-- Client appreciation events
-- Holiday parties
-- Training seminars
-- Networking events`,
-
-  'budgeting': `Event budgeting requires careful planning and contingency funds. Typical budget breakdown: venue (40-50%), catering (25-35%), entertainment (10-15%), decorations (8-10%), photography (5-8%), miscellaneous (5-10%). Always include a 10-15% contingency fund for unexpected expenses.
-
-Budget categories to consider:
-- Venue rental and setup fees
-- Catering and beverage service
-- Entertainment and speakers
-- Decorations and flowers
-- Photography and videography
-- Transportation and accommodations
-- Marketing and invitations
-- Insurance and permits
-- Contingency fund`,
-
-  'catering': `Catering is often the largest expense after venue costs. Consider dietary restrictions, meal timing, service style (buffet vs. plated), and beverage options. Popular choices include cocktail receptions, plated dinners, and buffet-style meals. Always taste-test menu options and confirm final headcount 1-2 weeks before the event.
-
-Catering considerations:
-- Guest dietary restrictions and preferences
-- Meal timing and service style
-- Beverage packages and bar service
-- Kitchen facilities and equipment needs
-- Service staff requirements
-- Setup and cleanup logistics`
+interface KnowledgeDocument {
+  filename: string
+  content: string
+  type: 'faq' | 'guide' | 'options'
 }
 
+let knowledgeDocuments: KnowledgeDocument[] = []
+
+// Load documents on initialization
+function loadKnowledgeDocuments(): void {
+  try {
+    // Load FAQ document
+    const faqPath = path.join(KNOWLEDGE_BASE_PATH, 'event-planning-faq.md')
+    if (fs.existsSync(faqPath)) {
+      knowledgeDocuments.push({
+        filename: 'event-planning-faq.md',
+        content: fs.readFileSync(faqPath, 'utf-8'),
+        type: 'faq'
+      })
+    }
+
+    // Load venue guide
+    const venueGuidePath = path.join(KNOWLEDGE_BASE_PATH, 'venue-selection-guide.txt')
+    if (fs.existsSync(venueGuidePath)) {
+      knowledgeDocuments.push({
+        filename: 'venue-selection-guide.txt',
+        content: fs.readFileSync(venueGuidePath, 'utf-8'),
+        type: 'guide'
+      })
+    }
+
+    // Load catering options
+    const cateringPath = path.join(KNOWLEDGE_BASE_PATH, 'catering-options.json')
+    if (fs.existsSync(cateringPath)) {
+      const cateringData = JSON.parse(fs.readFileSync(cateringPath, 'utf-8'))
+      knowledgeDocuments.push({
+        filename: 'catering-options.json',
+        content: JSON.stringify(cateringData, null, 2),
+        type: 'options'
+      })
+    }
+
+    console.log(`Loaded ${knowledgeDocuments.length} knowledge documents`)
+  } catch (error) {
+    console.error('Error loading knowledge documents:', error)
+  }
+}
+
+// Initialize documents
+loadKnowledgeDocuments()
+
 export function searchKnowledge(query: string): string | null {
+  if (knowledgeDocuments.length === 0) {
+    console.warn('No knowledge documents loaded')
+    return null
+  }
+
   const queryLower = query.toLowerCase()
+  let bestMatch: { document: KnowledgeDocument, relevantContent: string, score: number } | null = null
   
-  // Find matching topic
-  let matchedTopic: string | null = null
-  let matchedContent: string | null = null
-  
-  for (const [topic, content] of Object.entries(knowledgeBase)) {
-    if (queryLower.includes(topic) || 
-        queryLower.includes(topic.replace(' ', '')) ||
-        (topic === 'event planning' && (queryLower.includes('plan') && queryLower.includes('event'))) ||
-        (topic === 'wedding planning' && queryLower.includes('wedding')) ||
-        (topic === 'venue selection' && queryLower.includes('venue')) ||
-        (topic === 'corporate events' && queryLower.includes('corporate')) ||
-        (topic === 'budgeting' && (queryLower.includes('budget') || queryLower.includes('cost'))) ||
-        (topic === 'catering' && queryLower.includes('catering'))) {
-      matchedTopic = topic
-      matchedContent = content
-      break
+  // Search through each document
+  for (const document of knowledgeDocuments) {
+    const relevantContent = findRelevantContent(document, queryLower)
+    if (relevantContent) {
+      const score = calculateRelevanceScore(queryLower, relevantContent)
+      if (!bestMatch || score > bestMatch.score) {
+        bestMatch = { document, relevantContent, score }
+      }
     }
   }
   
-  if (!matchedContent || !matchedTopic) {
-    return null
+  if (!bestMatch) {
+    return null // This will trigger the fallback message
   }
   
-  // Generate contextual response based on the query
-  return generateContextualResponse(query, matchedTopic, matchedContent)
+  // Return the relevant content from the document
+  return formatDocumentResponse(bestMatch.relevantContent, bestMatch.document.type)
+}
+
+function findRelevantContent(document: KnowledgeDocument, query: string): string | null {
+  const content = document.content.toLowerCase()
+  
+  // Extract keywords from query
+  const keywords = extractQueryKeywords(query)
+  if (keywords.length === 0) return null
+  
+  // For FAQ documents, look for Q&A pairs
+  if (document.type === 'faq') {
+    return findRelevantFAQ(document.content, keywords, query)
+  }
+  
+  // For guide documents, look for relevant sections
+  if (document.type === 'guide') {
+    return findRelevantGuideSection(document.content, keywords, query)
+  }
+  
+  // For JSON options, search through the structured data
+  if (document.type === 'options') {
+    return findRelevantOptions(document.content, keywords, query)
+  }
+  
+  return null
+}
+
+function findRelevantFAQ(content: string, keywords: string[], query: string): string | null {
+  const lines = content.split('\n')
+  let currentQuestion = ''
+  let currentAnswer = ''
+  let inAnswer = false
+  let bestMatch = ''
+  let bestScore = 0
+  
+  for (const line of lines) {
+    if (line.startsWith('### Q:')) {
+      // Save previous Q&A if it was relevant
+      if (currentQuestion && currentAnswer) {
+        const score = calculateTextRelevance(currentQuestion + ' ' + currentAnswer, keywords, query)
+        if (score > bestScore) {
+          bestScore = score
+          bestMatch = currentQuestion + '\n' + currentAnswer
+        }
+      }
+      
+      currentQuestion = line
+      currentAnswer = ''
+      inAnswer = false
+    } else if (line.startsWith('A:')) {
+      inAnswer = true
+      currentAnswer = line
+    } else if (inAnswer && line.trim()) {
+      currentAnswer += '\n' + line
+    } else if (!line.trim()) {
+      inAnswer = false
+    }
+  }
+  
+  // Check the last Q&A pair
+  if (currentQuestion && currentAnswer) {
+    const score = calculateTextRelevance(currentQuestion + ' ' + currentAnswer, keywords, query)
+    if (score > bestScore) {
+      bestMatch = currentQuestion + '\n' + currentAnswer
+    }
+  }
+  
+  return bestMatch || null
+}
+
+function findRelevantGuideSection(content: string, keywords: string[], query: string): string | null {
+  const sections = content.split('\n\n')
+  let bestMatch = ''
+  let bestScore = 0
+  
+  for (const section of sections) {
+    const score = calculateTextRelevance(section, keywords, query)
+    if (score > bestScore) {
+      bestScore = score
+      bestMatch = section
+    }
+  }
+  
+  return bestScore > 0 ? bestMatch : null
+}
+
+function findRelevantOptions(jsonContent: string, keywords: string[], query: string): string | null {
+  try {
+    const data = JSON.parse(jsonContent)
+    const flatText = JSON.stringify(data, null, 2)
+    
+    // Search through the JSON structure for relevant content
+    const sections = flatText.split('\n')
+    let relevantSections: string[] = []
+    
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i]
+      const score = calculateTextRelevance(section, keywords, query)
+      if (score > 0) {
+        // Include context around the match
+        const start = Math.max(0, i - 3)
+        const end = Math.min(sections.length, i + 10)
+        const contextSection = sections.slice(start, end).join('\n')
+        relevantSections.push(contextSection)
+        break // Take first good match to avoid too much content
+      }
+    }
+    
+    return relevantSections.length > 0 ? relevantSections[0] : null
+  } catch (error) {
+    console.error('Error parsing JSON content:', error)
+    return null
+  }
+}
+
+function calculateTextRelevance(text: string, keywords: string[], query: string): number {
+  const textLower = text.toLowerCase()
+  let score = 0
+  
+  // Only consider event-related keywords to avoid false matches
+  const eventRelatedKeywords = keywords.filter(keyword => 
+    isEventRelatedKeyword(keyword) || textLower.includes(keyword + ' ')
+  )
+  
+  // Require at least 2 relevant keywords for a match
+  if (eventRelatedKeywords.length < 2 && keywords.length > 2) {
+    return 0
+  }
+  
+  // Score based on keyword matches
+  for (const keyword of eventRelatedKeywords) {
+    if (textLower.includes(keyword)) {
+      score += 1
+    }
+  }
+  
+  // Bonus for exact phrase matches
+  if (textLower.includes(query)) {
+    score += 3
+  }
+  
+  // Require minimum score threshold
+  return score >= 2 ? score : 0
+}
+
+function isEventRelatedKeyword(keyword: string): boolean {
+  const eventKeywords = [
+    'event', 'planning', 'venue', 'catering', 'wedding', 'party', 'celebration',
+    'guest', 'invitation', 'budget', 'timeline', 'coordinator', 'decoration',
+    'entertainment', 'food', 'service', 'reception', 'ceremony', 'corporate',
+    'conference', 'meeting', 'banquet', 'dinner', 'lunch', 'cocktail',
+    'capacity', 'location', 'booking', 'reservation', 'setup', 'logistics',
+    'vendor', 'supplier', 'menu', 'dietary', 'restriction', 'alcohol',
+    'beverage', 'music', 'photography', 'flowers', 'table', 'seating'
+  ]
+  
+  return eventKeywords.some(eventKeyword => 
+    keyword.includes(eventKeyword) || eventKeyword.includes(keyword)
+  )
+}
+
+function calculateRelevanceScore(query: string, content: string): number {
+  const keywords = extractQueryKeywords(query)
+  return calculateTextRelevance(content, keywords, query)
+}
+
+function formatDocumentResponse(content: string, type: string): string {
+  // Clean up the content for better presentation
+  let formatted = content.trim()
+  
+  // For JSON content, make it more readable
+  if (type === 'options') {
+    try {
+      const parsed = JSON.parse(formatted)
+      formatted = formatJSONForDisplay(parsed)
+    } catch (error) {
+      // If parsing fails, clean up the raw JSON
+      formatted = formatted
+        .replace(/[{}]/g, '')
+        .replace(/"/g, '')
+        .replace(/,\s*\n/g, '\n')
+        .trim()
+    }
+  }
+  
+  // Limit response length to avoid overwhelming users
+  if (formatted.length > 800) {
+    const sentences = formatted.split('. ')
+    formatted = sentences.slice(0, 4).join('. ') + '.'
+  }
+  
+  return formatted
+}
+
+function formatJSONForDisplay(obj: any, depth: number = 0): string {
+  if (typeof obj === 'string') return obj
+  if (typeof obj === 'number') return obj.toString()
+  if (typeof obj === 'boolean') return obj.toString()
+  if (obj === null) return 'null'
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => `• ${formatJSONForDisplay(item, depth + 1)}`).join('\n')
+  }
+  
+  if (typeof obj === 'object') {
+    const entries = Object.entries(obj)
+    return entries
+      .slice(0, 5) // Limit to first 5 entries
+      .map(([key, value]) => {
+        const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+        const formattedValue = formatJSONForDisplay(value, depth + 1)
+        return `${formattedKey}: ${formattedValue}`
+      })
+      .join('\n')
+  }
+  
+  return obj.toString()
 }
 
 /**
@@ -225,12 +429,17 @@ function analyzeQueryIntent(query: string): { isSpecific: boolean, intent: strin
 
 function extractQueryKeywords(query: string): string[] {
   // Remove common question words and extract meaningful keywords
-  const stopWords = ['what', 'how', 'when', 'where', 'why', 'who', 'which', 'is', 'are', 'do', 'does', 'can', 'should', 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by']
+  const stopWords = ['what', 'how', 'when', 'where', 'why', 'who', 'which', 'is', 'are', 'do', 'does', 'can', 'should', 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'me', 'about', 'tell', 'like', 'today']
   
-  return query
+  const keywords = query
+    .toLowerCase()
     .split(/\s+/)
     .filter(word => word.length > 2 && !stopWords.includes(word))
     .slice(0, 5) // Limit to 5 most important keywords
+  
+  // Only return keywords if at least one is event-related
+  const hasEventKeyword = keywords.some(keyword => isEventRelatedKeyword(keyword))
+  return hasEventKeyword ? keywords : []
 }
 
 function generateSummary(content: string, topic: string): string {

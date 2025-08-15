@@ -352,11 +352,46 @@ async function handleHighConfidenceResponse(
   message: any,
   ctx: any
 ) {
-  const answer = passages.map((p) => p.content).join('\n\n')
+  // Import refinement system dynamically
+  let refinedAnswer: string
   
-  // Add confidence indicator to response
-  const confidenceIndicator = getConfidenceIndicator(confidence.score)
-  const responseText = `${answer}\n\n${confidenceIndicator}`
+  try {
+    // Try to use the enhanced refinement system
+    const { KnowledgeResponseRefiner } = await import('../../bots/eventtitan/src/knowledge-response-refiner')
+    const { refinementConfigManager, detectTopicFromQuery } = await import('../../bots/eventtitan/src/knowledge-refinement-config')
+    
+    const rawAnswer = passages.map((p) => p.content).join('\n\n')
+    const topic = detectTopicFromQuery(message.payload.text)
+    const config = refinementConfigManager.getConfigForTopic(topic)
+    
+    const refiner = KnowledgeResponseRefiner.withConfig(config, client)
+    const refinedResponse = await refiner.refineResponse(rawAnswer, message.payload.text, {
+      maxLines: config.maxLines,
+      removeFileNames: config.removeFileNames,
+      removeSources: config.removeSources,
+      addEmojis: config.addEmojis,
+      includeFollowUp: config.includeFollowUp,
+      temperature: config.temperature,
+      maxTokens: config.maxTokens
+    })
+    
+    refinedAnswer = refinedResponse.content
+    
+    console.info('Knowledge plugin: Response refined successfully', {
+      originalLength: rawAnswer.length,
+      refinedLength: refinedResponse.refinedLength,
+      confidence: refinedResponse.confidence,
+      topic
+    })
+    
+  } catch (error) {
+    console.warn('Knowledge plugin: Refinement failed, using basic answer', error)
+    // Fallback to basic answer if refinement fails
+    refinedAnswer = passages.map((p) => p.content).join('\n\n')
+  }
+  
+  // Use refined answer instead of raw content
+  const responseText = refinedAnswer
   
   await client.createMessage({
     conversationId: message.conversationId,
@@ -393,13 +428,48 @@ async function handleMediumConfidenceResponse(
   ctx: any,
   originalText: string
 ) {
-  const answer = passages.map((p) => p.content).join('\n\n')
+  // Import refinement system dynamically for medium confidence responses too
+  let refinedAnswer: string
   
-  // Add confidence indicator and clarification option
-  const confidenceIndicator = getConfidenceIndicator(confidence.score)
-  const clarificationOffer = "\n\nIf this doesn't fully answer your question, please let me know and I can connect you with a human agent for more detailed assistance."
+  try {
+    // Try to use the enhanced refinement system
+    const { KnowledgeResponseRefiner } = await import('../../bots/eventtitan/src/knowledge-response-refiner')
+    const { refinementConfigManager, detectTopicFromQuery } = await import('../../bots/eventtitan/src/knowledge-refinement-config')
+    
+    const rawAnswer = passages.map((p) => p.content).join('\n\n')
+    const topic = detectTopicFromQuery(message.payload.text)
+    const config = refinementConfigManager.getConfigForTopic(topic)
+    
+    const refiner = KnowledgeResponseRefiner.withConfig(config, client)
+    const refinedResponse = await refiner.refineResponse(rawAnswer, message.payload.text, {
+      maxLines: config.maxLines,
+      removeFileNames: config.removeFileNames,
+      removeSources: config.removeSources,
+      addEmojis: config.addEmojis,
+      includeFollowUp: false, // Don't include follow-up for medium confidence, we'll add clarification instead
+      temperature: config.temperature,
+      maxTokens: config.maxTokens
+    })
+    
+    refinedAnswer = refinedResponse.content
+    
+    console.info('Knowledge plugin: Medium confidence response refined successfully', {
+      originalLength: rawAnswer.length,
+      refinedLength: refinedResponse.refinedLength,
+      confidence: refinedResponse.confidence,
+      topic
+    })
+    
+  } catch (error) {
+    console.warn('Knowledge plugin: Medium confidence refinement failed, using basic answer', error)
+    // Fallback to basic answer if refinement fails
+    refinedAnswer = passages.map((p) => p.content).join('\n\n')
+  }
   
-  const responseText = `${answer}\n\n${confidenceIndicator}${clarificationOffer}`
+  // Add clarification option for medium confidence
+  const clarificationOffer = "\n\n🤔 If this doesn't fully answer your question, please let me know and I can connect you with a human agent for more detailed assistance."
+  
+  const responseText = `${refinedAnswer}${clarificationOffer}`
   
   await client.createMessage({
     conversationId: message.conversationId,
