@@ -1,0 +1,61 @@
+{
+  "id": "blockchain-conference-2025",
+  "title": "Blockchain & Web3 Conference 2025",
+  "date": "10–11 April 2025",
+  "location": "Hyderabad International Convention Centre, Hyderabad, India",
+  "description": "Explore the future of blockchain technology, DeFi, NFTs, and Web3 innovations with industry pioneers and developers.",
+  "capacity": 750,
+  "ticketTypes": [
+    {
+      "type": "developer",
+      "name": "Developer Pass",
+      "price": 6000,
+      "currency": "INR",
+      "available": 300,
+      "description": "For blockchain developers and engineers"
+    },
+    {
+      "type": "business",
+      "name": "Business Pass",
+      "price": 12000,
+      "currency": "INR",
+      "available": 250,
+      "description": "For business leaders and entrepreneurs"
+    },
+    {
+      "type": "premium",
+      "name": "Premium Pass",
+      "price": 20000,
+      "currency": "INR",
+      "available": 150,
+      "description": "VIP access with exclusive workshops and networking"
+    },
+    {
+      "type": "student",
+      "name": "Student Pass",
+      "price": 3000,
+      "currency": "INR",
+      "available": 50,
+      "description": "Student discount with valid ID"
+    }
+  ],
+  "schedule": [
+    "Day 1: Keynotes on DeFi, NFT marketplaces, and blockchain scalability",
+    "Day 2: Technical workshops, developer sessions, and Web3 demos"
+  ],
+  "speakers": [
+    "Vitalik Buterin – Co-founder, Ethereum",
+    "Changpeng Zhao – Former CEO, Binance",
+    "Sandeep Nailwal – Co-founder, Polygon",
+    "Nischal Shetty – Founder, WazirX"
+  ],
+  "companies": [
+    "Ethereum Foundation", "Polygon", "Chainlink", "Uniswap",
+    "OpenSea", "MetaMask", "Coinbase", "WazirX", "CoinDCX"
+  ],
+  "contact": {
+    "email": "info@blockchainconf.in",
+    "phone": "+91-88776-65432",
+    "website": "www.blockchainconf.in"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "id": "tech-startup-expo-2025",
+  "title": "Tech Startup Expo 2025",
+  "date": "15–16 March 2025",
+  "location": "Mumbai Convention Center, Mumbai, India",
+  "description": "Discover the next generation of tech startups, meet investors, and explore innovative solutions across various industries.",
+  "capacity": 500,
+  "ticketTypes": [
+    {
+      "type": "student",
+      "name": "Student Pass",
+      "price": 2000,
+      "currency": "INR",
+      "available": 100,
+      "description": "Student discount with valid ID"
+    },
+    {
+      "type": "entrepreneur",
+      "name": "Entrepreneur Pass",
+      "price": 5000,
+      "currency": "INR",
+      "available": 200,
+      "description": "Perfect for startup founders and entrepreneurs"
+    },
+    {
+      "type": "investor",
+      "name": "Investor Pass",
+      "price": 10000,
+      "currency": "INR",
+      "available": 150,
+      "description": "Exclusive access to investor meetups and pitch sessions"
+    },
+    {
+      "type": "corporate",
+      "name": "Corporate Pass",
+      "price": 8000,
+      "currency": "INR",
+      "available": 50,
+      "description": "For corporate representatives and enterprise buyers"
+    }
+  ],
+  "schedule": [
+    "Day 1: Startup pitches, investor panels, networking lunch",
+    "Day 2: Product demos, workshops, closing networking event"
+  ],
+  "speakers": [
+    "Ratan Tata – Chairman Emeritus, Tata Sons",
+    "Kunal Bahl – Co-founder, Snapdeal",
+    "Falguni Nayar – Founder, Nykaa",
+    "Ritesh Agarwal – Founder, OYO"
+  ],
+  "contact": {
+    "email": "hello@techstartupexpo.com",
+    "phone": "+91-99887-76543",
+    "website": "www.techstartupexpo.com"
+  }
+}

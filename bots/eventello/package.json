@@ -1,0 +1,19 @@
+{
+  "name": "@bp-templates/empty-bot",
+  "scripts": {
+    "check:type": "tsc --noEmit",
+    "book": "npx ts-node src/cli.ts",
+    "book:events": "npx ts-node src/cli.ts",
+    "interactive": "npx ts-node src/cli.ts"
+  },
+  "private": true,
+  "dependencies": {
+    "@botpress/client": "1.21.0",
+    "@botpress/sdk": "4.15.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.16.4",
+    "typescript": "^5.6.3",
+    "ts-node": "^10.9.2"
+  }
+}

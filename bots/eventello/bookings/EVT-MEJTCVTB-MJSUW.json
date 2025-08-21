@@ -1,0 +1,19 @@
+{
+  "bookingReference": "EVT-MEJTCVTB-MJSUW",
+  "eventId": "global-ai-summit-2025",
+  "eventTitle": "Global AI Innovation Summit 2025",
+  "eventDate": "20–22 November 2025",
+  "eventLocation": "International Convention Centre, Bengaluru, India",
+  "ticketType": "standard",
+  "ticketName": "Standard Ticket",
+  "quantity": 2,
+  "totalPrice": 30000,
+  "currency": "INR",
+  "customerInfo": {
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone": "+91-98765-43210"
+  },
+  "bookingDate": "2025-01-20T10:30:00.000Z",
+  "status": "confirmed"
+}

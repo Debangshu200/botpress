@@ -1,0 +1,65 @@
+{
+  "id": "global-ai-summit-2025",
+  "title": "Global AI Innovation Summit 2025",
+  "date": "20–22 November 2025",
+  "location": "International Convention Centre, Bengaluru, India",
+  "description": "Join industry leaders, researchers, and innovators for three days of cutting-edge AI discussions, workshops, and networking opportunities.",
+  "capacity": 1000,
+  "ticketTypes": [
+    {
+      "type": "student",
+      "name": "Student Ticket",
+      "price": 8000,
+      "currency": "INR",
+      "available": 200,
+      "description": "Valid student ID required"
+    },
+    {
+      "type": "early-bird",
+      "name": "Early Bird Ticket", 
+      "price": 12000,
+      "currency": "INR",
+      "available": 300,
+      "description": "20% discount until 30 September 2025"
+    },
+    {
+      "type": "standard",
+      "name": "Standard Ticket",
+      "price": 15000,
+      "currency": "INR", 
+      "available": 400,
+      "description": "Full access to all sessions"
+    },
+    {
+      "type": "vip",
+      "name": "VIP Ticket",
+      "price": 25000,
+      "currency": "INR",
+      "available": 100,
+      "description": "Premium seating, exclusive networking, and welcome kit"
+    }
+  ],
+  "schedule": [
+    "Day 1: Keynote sessions, AI industry trends, product showcases",
+    "Day 2: Technical workshops, startup pitches, networking events", 
+    "Day 3: Panel discussions, future roadmaps, closing ceremony"
+  ],
+  "speakers": [
+    "Sam Altman – CEO, OpenAI",
+    "Demis Hassabis – CEO, DeepMind",
+    "Fei-Fei Li – Co-Director, Stanford Human-Centered AI",
+    "Andrew Ng – Founder, DeepLearning.AI",
+    "Jensen Huang – CEO, NVIDIA",
+    "Yoshua Bengio – Turing Award Winner"
+  ],
+  "companies": [
+    "OpenAI", "Google DeepMind", "Anthropic", "Microsoft AI Research",
+    "NVIDIA AI Labs", "Hugging Face", "Stability AI", "Tesla AI",
+    "Cohere", "IBM Watson"
+  ],
+  "contact": {
+    "email": "info@futureofaisummit.com",
+    "phone": "+91-98765-43210",
+    "website": "www.futureofaisummit.com"
+  }
+}
