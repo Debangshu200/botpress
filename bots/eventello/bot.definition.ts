@@ -1,7 +1,18 @@
 import * as sdk from '@botpress/sdk'
 
 export default new sdk.BotDefinition({
-  // Custom actions for event management
+  integrations: {
+    whatsapp: {
+      name: 'whatsapp',
+      version: '0.2.0',
+      type: 'integration',
+      definition: {
+        name: 'whatsapp',
+        version: '0.2.0'
+      }
+    }
+  },
+
   actions: {
     // First action  - Get all the available events
     getAvailableEvents: {

@@ -2,9 +2,7 @@
   "name": "@bp-templates/empty-bot",
   "scripts": {
     "check:type": "tsc --noEmit",
-    "book": "npx ts-node src/cli.ts",
-    "book:events": "npx ts-node src/cli.ts",
-    "interactive": "npx ts-node src/cli.ts"
+    "dev": "bp dev"
   },
   "private": true,
   "dependencies": {
