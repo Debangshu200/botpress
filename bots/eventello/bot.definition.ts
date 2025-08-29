@@ -1,17 +1,38 @@
 import * as sdk from '@botpress/sdk'
 
 export default new sdk.BotDefinition({
+
   integrations: {
-    whatsapp: {
-      name: 'whatsapp',
-      version: '0.2.0',
-      type: 'integration',
-      definition: {
-        name: 'whatsapp',
-        version: '0.2.0'
-      }
-    }
-  },
+    // Add Web Speech integration
+    //  webSpeech: {
+    //   type: 'integration',
+    //   name: 'web-speech',
+    //   version: '0.1.0',
+    //   configuration: {
+    //     language: 'en-US',
+    //     continuous: true
+    //   }
+    // },
+//     whatsapp: {
+//       type: 'integration',
+//       definition:{
+//         name: 'whatsapp',
+//         version: '0.2.0',
+//         // description: 'WhatsApp Integration for event booking',
+//         // icons: {
+//         //   square: 'https://cdn.botpress.dev/images/whatsapp-square.svg'
+//         // },
+//         configuration: {
+//           schema: sdk.z.object({
+//             phoneNumber: sdk.z.string()
+//           })
+//         }
+//       },
+//       configuration: {
+//         phoneNumber: process.env.WHATSAPP_PHONE_NUMBER || ''
+//       }
+//     }
+ },
 
   actions: {
     // First action  - Get all the available events
