@@ -2,6 +2,9 @@ import * as bp from '.botpress'
 import * as fs from 'fs'
 import * as path from 'path'
 
+// Add HTTP client for RAG integration
+import axios from 'axios'
+
 /**
  * Event data interface - defines the structure of event information
  * This interface ensures type safety when working with event data
@@ -281,6 +284,64 @@ const bot = new bp.Bot({
       }
       
       return { success: true, bookingReference, totalPrice }
+    },
+    
+    /**
+     * Query the RAG system for knowledge-based responses
+     * Sends HTTP POST request to the RAG system and returns the response
+     * 
+     * @param input - Object containing the query string
+     * @returns Object with RAG response, success status, and optional error
+     */
+    queryRAG: async ({ input }: any) => {
+      const { query } = input
+      
+      try {
+        // Make HTTP POST request to RAG system
+        const response = await axios.post('http://localhost:8000/query', {
+          query: query
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          timeout: 10000 // 10 second timeout
+        })
+        
+        if (response.status === 200 && response.data) {
+          return {
+            response: response.data.response || response.data.answer || 'No response received',
+            success: true
+          }
+        } else {
+          return {
+            response: 'Unexpected response format from RAG system',
+            success: false,
+            error: 'Invalid response format'
+          }
+        }
+      } catch (error: any) {
+        console.error('Error querying RAG system:', error)
+        
+        if (error.code === 'ECONNREFUSED') {
+          return {
+            response: 'RAG system is not available. Please try again later.',
+            success: false,
+            error: 'Connection refused - RAG system may be down'
+          }
+        } else if (error.code === 'ETIMEDOUT') {
+          return {
+            response: 'Request to RAG system timed out. Please try again.',
+            success: false,
+            error: 'Request timeout'
+          }
+        } else {
+          return {
+            response: 'Error connecting to RAG system. Please try again later.',
+            success: false,
+            error: error.message || 'Unknown error'
+          }
+        }
+      }
     }
   }
 })
@@ -323,6 +384,10 @@ bot.on.message('*', async ({ message, client, ctx }) => {
         
       case 'confirmation':
         await handleConfirmation(client, ctx, conversationId, userMessage)
+        break
+        
+      case 'rag-query':
+        await handleRAGQuery(client, ctx, conversationId, userMessage)
         break
         
       default:
@@ -369,7 +434,7 @@ async function handleWelcome(client: any, ctx: any, conversationId: string, user
     const events = loadEvents()
     
     if(events.length === 0) {
-      await (client as any).createmessage({
+      await (client as any).createMessage({
         conversationId,
         userId: ctx.botId,
         tags: {},
@@ -383,8 +448,8 @@ async function handleWelcome(client: any, ctx: any, conversationId: string, user
     let eventsList = "🎉 Available Events\n\n"
     events.forEach((event, index) => {
       eventsList += `${index + 1}. ${event.title}\n`
-      eventsList += `📅 ${event.date}\n`
-      eventsList += `📍 ${event.location}\n`
+      eventsList += `${event.date}\n`
+      eventsList += `${event.location}\n`
       eventsList += `${event.description}\n\n`
     })
     
@@ -401,15 +466,34 @@ async function handleWelcome(client: any, ctx: any, conversationId: string, user
     
     // Move to event selection step
     updateConversationState(conversationId, { step: 'event-selection' })
-  } else {
-    // Send general welcome message if user didn't ask about events
+  } 
+  // Check if user wants to ask a question (RAG query)
+  else if (userMessage.includes('?') || userMessage.includes('what') || userMessage.includes('how') || userMessage.includes('why') || userMessage.includes('when') || userMessage.includes('where') || userMessage.includes('who') || userMessage.includes('help')) {
+    // Route to RAG query step
     await (client as any).createMessage({
       conversationId,
       userId: ctx.botId,
       tags: {},
       type: 'text',
       payload: {
-        text: "👋 Welcome to EventBooking Bot!\n\nI can help you book tickets for upcoming events. Type 'events' to see what's available!"
+        text: "🤖 I'll help you with that question using my knowledge base. Let me search for the best answer..."
+      }
+    })
+    
+    // Move to RAG query step
+    updateConversationState(conversationId, { step: 'rag-query' })
+    
+    // Process the query immediately
+    await handleRAGQuery(client, ctx, conversationId, userMessage)
+  } else {
+    // Send general welcome message if user didn't ask about events or questions
+    await (client as any).createMessage({
+      conversationId,
+      userId: ctx.botId,
+      tags: {},
+      type: 'text',
+      payload: {
+        text: "👋 Welcome to EventBooking Bot!\n\nI can help you with:\n\n🎫 **Event Booking** - Type 'events' to see available events\n🤖 **Knowledge Questions** - Ask me anything and I'll search my knowledge base\n\nWhat would you like to do?"
       }
     })
   }
@@ -720,6 +804,85 @@ async function handlePersonalDetails(client: any, ctx: any, conversationId: stri
     
     // Move to final confirmation step
     updateConversationState(conversationId, { step: 'confirmation' })
+  }
+}
+
+/**
+ * Handle RAG query step of the conversation
+ * Processes user queries through the RAG system and returns knowledge-based responses
+ * 
+ * @param client - Botpress client for sending messages
+ * @param ctx - Conversation context containing bot information
+ * @param conversationId - Unique identifier for this conversation
+ * @param userMessage - User's input message (the query for RAG system)
+ */
+async function handleRAGQuery(client: any, ctx: any, conversationId: string, userMessage: string) {
+  try {
+    // Make direct HTTP request to RAG system instead of calling action
+    const axios = require('axios')
+    
+    const response = await axios.post('http://localhost:8000/query', {
+      query: userMessage
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      timeout: 10000
+    })
+    
+    if (response.status === 200 && response.data) {
+      const ragResponse = response.data.response || response.data.answer || 'No response received'
+      
+      // Send RAG response to user
+      await (client as any).createMessage({
+        conversationId,
+        userId: ctx.botId,
+        tags: {},
+        type: 'text',
+        payload: { 
+          text: `🤖 **RAG Response:**\n\n${ragResponse}\n\n---\n\nYou can ask another question or type 'events' to book event tickets.` 
+        }
+      })
+    } else {
+      // Handle unexpected response format
+      await (client as any).createMessage({
+        conversationId,
+        userId: ctx.botId,
+        tags: {},
+        type: 'text',
+        payload: { 
+          text: `❌ **RAG System Error:**\n\nUnexpected response format from RAG system.\n\n---\n\nYou can try asking again or type 'events' to book event tickets.` 
+        }
+      })
+    }
+    
+    // Return to welcome step for next interaction
+    updateConversationState(conversationId, { step: 'welcome' })
+    
+  } catch (error: any) {
+    console.error('Error in RAG query handler:', error)
+    
+    let errorMessage = "Sorry, there was an error processing your query. Please try again or type 'events' to book event tickets."
+    
+    if (error.code === 'ECONNREFUSED') {
+      errorMessage = "❌ **RAG System Error:**\n\nRAG system is not available. Please try again later.\n\n---\n\nYou can try asking again or type 'events' to book event tickets."
+    } else if (error.code === 'ETIMEDOUT') {
+      errorMessage = "❌ **RAG System Error:**\n\nRequest to RAG system timed out. Please try again.\n\n---\n\nYou can try asking again or type 'events' to book event tickets."
+    }
+    
+    // Send error message to user
+    await (client as any).createMessage({
+      conversationId,
+      userId: ctx.botId,
+      tags: {},
+      type: 'text',
+      payload: { 
+        text: errorMessage
+      }
+    })
+    
+    // Return to welcome step
+    updateConversationState(conversationId, { step: 'welcome' })
   }
 }
 

@@ -101,6 +101,23 @@ export default new sdk.BotDefinition({
           success: sdk.z.boolean()
         })
       }
+    },
+    // Fourth action - RAG Query Integration
+    queryRag: {
+      title: 'Query RAG System',
+      description: 'Query the RAG system for knowledge-based responses',
+      input: {
+        schema: sdk.z.object({
+          query: sdk.z.string()
+        })
+      },
+      output: {
+        schema: sdk.z.object({
+          response: sdk.z.string(),
+          success: sdk.z.boolean(),
+          error: sdk.z.string().optional()
+        })
+      }
     }
   }
 })
